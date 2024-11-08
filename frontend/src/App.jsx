@@ -25,7 +25,7 @@ function App() {
 
         <Route path="/dashboard" element={
           <ProtectedRoute isAuthenticated={isAuthenticated}>
-            <h1>Dashboard</h1>
+            <h1>you are logged in mate 😎 </h1>
           </ProtectedRoute>
         } />
 

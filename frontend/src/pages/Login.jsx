@@ -38,8 +38,8 @@ export default function Login() {
       localStorage.removeItem('tempUserId');
       localStorage.setItem('isAuthenticated', 'true');
       setTimeout(() => {
-        window.location.href = 'http://localhost:7000/';
-      }, 2000);
+        window.location.href = '/dashboard';
+      }, 500);
     } catch (err) {
       setError(err.message || 'An error occurred during OTP verification.');
     }
