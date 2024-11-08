@@ -1,6 +1,10 @@
-# VX-Auth
+# Vaultbox-auth
 
-VX-Auth is an authentication service for Vaultbox, consisting of a backend server and a frontend application.
+
+https://github.com/user-attachments/assets/4ed10ec1-f88c-47a5-a4b2-36bd4fcf4471
+
+
+Vaultbox-Auth is an authentication service for Vaultbox which is our final year project, consisting of a backend server and a frontend application.
 
 ## Project Structure
 
