@@ -12,7 +12,7 @@ const hashPassword = async (password) => await bcrypt.hash(password, saltRounds)
 const users = [
   {
     id: '1',
-    email: 'therushidesign@gmail.com',
+    email: 'yourmail@gmail.com',
     password: '', // set this after hashing
   }
 ];
