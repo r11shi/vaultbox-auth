@@ -24,6 +24,12 @@ This is the frontend application for the VX-Auth project, built with React and V
    VITE_API_URL=http://localhost:3000/api
    ```
 
+4. Change the login email and password according to your choice 
+   ```
+   
+   ```
+    
+
 ## Running the Application
 
 Start the development server: npm run dev

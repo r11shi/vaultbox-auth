@@ -41,6 +41,23 @@ This is the backend service for the VX-Auth project, providing authentication an
    - Create an App Password for your application
    - Use this App Password as the EMAIL_PASSWORD in your .env file
 
+3. Go to the authService.js change the email to your valid email & password according to you. :
+   ```
+   const users = [
+   {
+         id: '1',
+         email: 'therushidesign@gmail.com',
+         password: '', // et this after hashing
+      }
+   ];
+
+   (async () => {
+      users[0].password = await hashPassword('password123');
+   })();
+
+   ```
+   
+
 ## Running the Server
 
 Start the development server: node src\app.js

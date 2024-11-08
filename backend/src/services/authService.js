@@ -5,75 +5,63 @@ const emailService = require('./emailService');
 
 const saltRounds = 10;
 
-const hashPassword = async (password) => {
-  return await bcrypt.hash(password, saltRounds);
-};
+// Hash password once when the application starts for consistent test data
+const hashPassword = async (password) => await bcrypt.hash(password, saltRounds);
 
-// Mock user data (replace with database later)
+// Mock user data (replace with a database later)
 const users = [
   {
     id: '1',
     email: 'therushidesign@gmail.com',
-    password: '', // We'll set this after hashing
+    password: '', // set this after hashing
   }
 ];
 
-// Immediately invoke this function to set the hashed password
+// Immediately hash the test password
 (async () => {
   users[0].password = await hashPassword('password123');
 })();
 
 const otpStore = new Map();
 
+// Authenticate user and generate OTP
 const authenticateUser = async (email, password) => {
   const user = users.find(u => u.email === email);
-  if (!user) {
-    throw new Error('Authentication failed');
-  }
+  if (!user) throw new Error('Authentication failed');
 
-  const isPasswordValid = await bcrypt.compare(password, user.password);
-  if (!isPasswordValid) {
-    throw new Error('Authentication failed');
-  }
+  // Validate password synchronously for a minor speed boost
+  const isPasswordValid = bcrypt.compareSync(password, user.password);
+  if (!isPasswordValid) throw new Error('Authentication failed');
 
+  // Generate and store OTP immediately
   const otp = otpUtils.generateOTP();
-  console.log(`Generated OTP for user ${user.id}: ${otp}`);
   otpStore.set(user.id, { otp, createdAt: Date.now() });
-  console.log('Stored OTP:', otpStore.get(user.id));
 
-  await emailService.sendOTPEmail(user.email, otp);
+  // Send OTP email in the background without blocking the response
+  emailService.sendOTPEmail(user.email, otp)
+    .then(() => console.log('OTP email sent'))
+    .catch(err => console.error('Error sending OTP email:', err));
 
+  // Return user ID immediately for faster front-end transition
   return { userId: user.id };
 };
 
+// Verify OTP with expiry check
 const verifyOTP = async (userId, otp) => {
-  console.log(`Verifying OTP for user ${userId}: ${otp}`);
-  console.log('Current OTP store:', otpStore);
   const storedOTP = otpStore.get(userId);
-  console.log(`Stored OTP for user ${userId}:`, storedOTP);
+  if (!storedOTP) throw new Error('Invalid OTP or OTP expired');
 
-  if (!storedOTP) {
-    console.log(`No OTP found for user ${userId}`);
-    throw new Error('Invalid OTP or OTP expired');
+  // Check if OTP matches and is within 5 minutes
+  if (storedOTP.otp !== otp || Date.now() - storedOTP.createdAt > 5 * 60 * 1000) {
+    otpStore.delete(userId); // Clean up expired OTP
+    throw new Error('Invalid or expired OTP');
   }
 
-  if (storedOTP.otp !== otp) {
-    console.log(`OTP mismatch for user ${userId}. Received: ${otp}, Stored: ${storedOTP.otp}`);
-    throw new Error('Invalid OTP');
-  }
-
-  if (Date.now() - storedOTP.createdAt > 5 * 60 * 1000) {
-    console.log(`OTP expired for user ${userId}`);
-    throw new Error('OTP expired');
-  }
-
-  console.log(`OTP verified successfully for user ${userId}`);
+  // OTP verified successfully; issue a token and clear OTP
   otpStore.delete(userId);
-  console.log('Updated OTP store after verification:', otpStore);
-
   const user = users.find(u => u.id === userId);
   const token = jwtUtils.generateToken(user);
-
+  
   return { token };
 };
 

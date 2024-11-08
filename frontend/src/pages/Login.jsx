@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle, EyeIcon, EyeOffIcon } from "lucide-react";
+import { AlertCircle, EyeIcon, EyeOffIcon, LoaderIcon } from "lucide-react";
 import { login, verifyOTP } from '@/services/authService';
 
 export default function Login() {
@@ -14,23 +14,30 @@ export default function Login() {
   const [otp, setOTP] = useState("");
   const [error, setError] = useState("");
   const [step, setStep] = useState("login"); // 'login', 'otp', or 'authenticated'
+  const [loading, setLoading] = useState(false); // Loading state for button animation
   const navigate = useNavigate();
 
+  // Handles login form submission
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setLoading(true); // Show loading spinner on login button
     try {
       const result = await login(email, password);
-      setStep('otp');
+      setStep('otp'); // Move to OTP step immediately
       localStorage.setItem('tempUserId', result.userId);
     } catch (err) {
       setError('Invalid email or password');
+    } finally {
+      setLoading(false); // Remove loading spinner after response
     }
   };
 
+  // Handles OTP form submission
   const handleOTPSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setLoading(true); // Show loading spinner on verify button
     try {
       const userId = localStorage.getItem('tempUserId');
       await verifyOTP(userId, otp);
@@ -42,9 +49,12 @@ export default function Login() {
       }, 500);
     } catch (err) {
       setError(err.message || 'An error occurred during OTP verification.');
+    } finally {
+      setLoading(false); // Remove loading spinner after response
     }
   };
 
+  // Limits OTP input to alphanumeric characters and max length of 6
   const handleOTPChange = (e) => {
     const value = e.target.value.replace(/[^a-zA-Z0-9]/g, '');
     if (value.length <= 6) {
@@ -52,10 +62,12 @@ export default function Login() {
     }
   };
 
+  // Toggles password visibility
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
 
+  // Renders the correct form based on the current step
   const renderForm = () => {
     switch (step) {
       case "login":
@@ -89,16 +101,15 @@ export default function Login() {
                   onClick={togglePasswordVisibility}
                   className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-white"
                 >
-                  {showPassword ? (
-                    <EyeOffIcon className="h-5 w-5" />
-                  ) : (
-                    <EyeIcon className="h-5 w-5" />
-                  )}
+                  {showPassword ? <EyeOffIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
                 </button>
               </div>
             </div>
-            <Button type="submit" className="w-full bg-[#FF451C] hover:bg-[#FF6B4A] text-white mt-6">
-              Login
+            <Button type="submit" 
+               className="w-full bg-[#FF451C] hover:bg-[#FF6B4A] text-white mt-6"
+              disabled={loading} // Disable button while loading
+            >
+             {loading ? <LoaderIcon className="animate-spin h-5 w-5" /> : 'Verify'}
             </Button>
           </form>
         );
@@ -118,8 +129,12 @@ export default function Login() {
                 className="w-full bg-transparent border-gray-700 text-white placeholder-gray-500 text-center text-2xl tracking-widest"
               />
             </div>
-            <Button type="submit" className="w-full bg-[#FF451C] hover:bg-[#FF6B4A] text-white mt-6">
-              Verify
+            <Button 
+              type="submit" 
+              className="w-full bg-[#FF451C] hover:bg-[#FF6B4A] text-white mt-6"
+              disabled={loading}
+            >
+              {loading ? <LoaderIcon className="animate-spin h-5 w-5" /> : 'Verify'}
             </Button>
           </form>
         );
@@ -159,9 +174,10 @@ export default function Login() {
           {renderForm()}
           {step === "login" && (
             <div className="text-center text-sm text-gray-400">
+              <p>Disclaimer: Use your own email and password</p>
               <p>Dummy account for testing:</p>
-              <p>Email: test@vaultbox.com</p>
-              <p>Password: vaultbox123</p>
+              <p>Email: yourmail@gmail.com</p>
+              <p>Password: password123</p>
             </div>
           )}
           {step === "otp" && (
